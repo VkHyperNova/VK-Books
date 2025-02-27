@@ -2,17 +2,23 @@ package db
 
 import (
 	"encoding/json"
+	"io"
 	"os"
+	"vk-books/pkg/config"
+	"vk-books/pkg/util"
+
+	"github.com/peterh/liner"
 )
 
 type Book struct {
 	ID        int    `json:"id"`
 	BOOK      string `json:"book"`
 	AUTHOR    string `json:"author"`
-	PAGES     int    `json:"pages"`
-	READCOUNT int    `json:"readcount"`
-	TYPE      string `json:"type"`
+	PAGES     string `json:"pages"`
+	READCOUNT string `json:"readcount"`
+	GENRE     string `json:"genre"`
 	LANGUAGE  string `json:"language"`
+	OPINION   string `json:"opinion"`
 	DATE      string `json:"date"`
 }
 
@@ -20,35 +26,93 @@ type Books struct {
 	BOOKS []Book `json:"books"`
 }
 
-func (b *Books) Insert() error {
+func (b *Books) ReadFromFile(path string) {
+	
+	util.CreateDirectoryIfNotExists("BOOKS")
 
-	id := b.UniqueID()
-
-	newBook := Book{
-		ID:        id,
-		BOOK:      "Book1",
-		AUTHOR:    "Author1",
-		PAGES:     100,
-		READCOUNT: 0,
-		TYPE:      "Fiction",
-		LANGUAGE:  "English",
-		DATE:      "2022-01-01",
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err)
 	}
 
+	defer file.Close()
+
+	byteValue, err := io.ReadAll(file)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(byteValue, b)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (b *Books) Insert(newBook Book) error {
+
+	// Append
 	b.BOOKS = append(b.BOOKS, newBook)
 
-	formattedBooks, err := json.MarshalIndent(b, "", "  ")
+	// Format The Books JSON
+	formattedJSON, err := json.MarshalIndent(b, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	SaveToFile("./BOOKS/books.json", formattedBooks)
-	SaveToFile("/media/veikko/VK DATA/DATABASES/BOOKS/books.json", formattedBooks) // Backup
+	// Save
+	err = SaveToFile(config.LocalPath, formattedJSON)
+	if err != nil {
+		return err
+	}
 
+	// Backup Save
+	err = SaveToFile(config.BackupPath, formattedJSON)
+	if err != nil {
+		return err
+	}
+
+	// Success
 	return nil
 }
 
-func (b *Books) UniqueID() int {
+func GetUserInput(id int) Book {
+
+	bookName := PromptWithSuggestion("Book Name:", "")
+	author := PromptWithSuggestion("Author:", "")
+	pages := PromptWithSuggestion("Pages:", "")
+	readCount := PromptWithSuggestion("Read Count:", "1")
+	genre := PromptWithSuggestion("Genre:", "")
+	language := PromptWithSuggestion("Language:", "English")
+	opinion := PromptWithSuggestion("Opinion:", "")
+
+
+	return Book{
+		ID:        id,
+		BOOK:      bookName,
+		AUTHOR:    author,
+		PAGES:     pages,
+		READCOUNT: readCount,
+		GENRE:     genre,
+		LANGUAGE:  language,
+		OPINION:   opinion,
+		DATE:      "2022-01-01",
+	}
+}
+
+func PromptWithSuggestion(name string, suggestion string) string {
+
+	line := liner.NewLiner()
+	defer line.Close()
+
+	input, err := line.PromptWithSuggestion("   "+name+": ", suggestion, -1)
+	if err != nil {
+		panic(err)
+	}
+
+	return input
+}
+
+func (b *Books) GenerateUniqueID() int {
 
 	maxID := 0
 
@@ -70,3 +134,5 @@ func SaveToFile(path string, newBook []byte) error {
 
 	return nil
 }
+
+

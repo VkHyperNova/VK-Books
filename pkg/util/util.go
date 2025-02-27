@@ -1,14 +1,18 @@
 package util
 
 import (
-	"fmt"
+	"log"
 	"os"
+	"vk-books/pkg/config"
 )
 
-func CreateDirectory(folderName string) {
+func CreateDirectoryIfNotExists(folderName string) {
 	if err := os.MkdirAll(folderName, 0700); err != nil {
-		fmt.Println("Error creating folder:", err)
+		log.Println("Error creating folder:", err)
 	} else {
-		fmt.Println(folderName, "folder is ready")
+		err = os.WriteFile(config.LocalPath, []byte(`{"books": []}`), 0644)
+		if err != nil {
+			panic(err)
+		}
 	}
 }

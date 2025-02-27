@@ -1,0 +1,15 @@
+{
+  "books": [
+    {
+      "id": 1,
+      "book": "BOOKNAME",
+      "author": "Veikko kiis",
+      "pages": "2000",
+      "readcount": "1",
+      "genre": "classic",
+      "language": "English",
+      "opinion": "good",
+      "date": "2022-01-01"
+    }
+  ]
+}
