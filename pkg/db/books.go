@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"time"
 	"vk-books/pkg/config"
-	"vk-books/pkg/util"
 
 	"github.com/peterh/liner"
 )
@@ -27,8 +27,6 @@ type Books struct {
 }
 
 func (b *Books) ReadFromFile(path string) {
-	
-	util.CreateDirectoryIfNotExists("BOOKS")
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -48,7 +46,7 @@ func (b *Books) ReadFromFile(path string) {
 	}
 }
 
-func (b *Books) Insert(newBook Book) error {
+func (b *Books) Add(newBook Book) error {
 
 	// Append
 	b.BOOKS = append(b.BOOKS, newBook)
@@ -77,25 +75,25 @@ func (b *Books) Insert(newBook Book) error {
 
 func GetUserInput(id int) Book {
 
-	bookName := PromptWithSuggestion("Book Name:", "")
+	book := PromptWithSuggestion("Book Name:", "")
 	author := PromptWithSuggestion("Author:", "")
 	pages := PromptWithSuggestion("Pages:", "")
 	readCount := PromptWithSuggestion("Read Count:", "1")
 	genre := PromptWithSuggestion("Genre:", "")
 	language := PromptWithSuggestion("Language:", "English")
 	opinion := PromptWithSuggestion("Opinion:", "")
-
+	date := PromptWithSuggestion("Date:", time.Now().Format("02.01.2006"))
 
 	return Book{
 		ID:        id,
-		BOOK:      bookName,
+		BOOK:      book,
 		AUTHOR:    author,
 		PAGES:     pages,
 		READCOUNT: readCount,
 		GENRE:     genre,
 		LANGUAGE:  language,
 		OPINION:   opinion,
-		DATE:      "2022-01-01",
+		DATE:      date,
 	}
 }
 
@@ -134,5 +132,3 @@ func SaveToFile(path string, newBook []byte) error {
 
 	return nil
 }
-
-

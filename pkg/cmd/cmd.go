@@ -21,7 +21,7 @@ func CommandLine(books *db.Books) {
 	case "a", "add", "insert":
 		id := books.GenerateUniqueID()
 		newBook := db.GetUserInput(id)
-		books.Insert(newBook)
+		books.Add(newBook)
 	case "u", "update":
 		// Update
 	case "d", "delete":
