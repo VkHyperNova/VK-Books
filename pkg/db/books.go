@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -26,24 +27,27 @@ type Books struct {
 	BOOKS []Book `json:"books"`
 }
 
-func (b *Books) ReadFromFile(path string) {
+func (b *Books) ReadFromFile(path string) error {
 
+	// Open file
 	file, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error opening file %s: %w", path, err)
 	}
-
 	defer file.Close()
 
+	// Read entire file content
 	byteValue, err := io.ReadAll(file)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error reading file %s: %w", path, err)
 	}
 
-	err = json.Unmarshal(byteValue, b)
-	if err != nil {
-		panic(err)
+	// Unmarshal JSON data
+	if err := json.Unmarshal(byteValue, b); err != nil {
+		return fmt.Errorf("error parsing JSON from file %s: %w", path, err)
 	}
+
+	return nil
 }
 
 func (b *Books) Add(newBook Book) error {
@@ -51,22 +55,16 @@ func (b *Books) Add(newBook Book) error {
 	// Append
 	b.BOOKS = append(b.BOOKS, newBook)
 
-	// Format The Books JSON
-	formattedJSON, err := json.MarshalIndent(b, "", "  ")
-	if err != nil {
-		return err
-	}
-
 	// Save
-	err = SaveToFile(config.LocalPath, formattedJSON)
+	err := b.SaveToFile(config.LocalPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to save JSON file to LocalPath: %w", err)
 	}
 
 	// Backup Save
-	err = SaveToFile(config.BackupPath, formattedJSON)
+	err = b.SaveToFile(config.BackupPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to save JSON file to BackupPath: %w", err)
 	}
 
 	// Success
@@ -123,9 +121,14 @@ func (b *Books) GenerateUniqueID() int {
 	return maxID + 1
 }
 
-func SaveToFile(path string, newBook []byte) error {
+func (b *Books) SaveToFile(path string) error {
 
-	err := os.WriteFile(path, newBook, 0644)
+	newBook, err := json.MarshalIndent(b, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(path, newBook, 0644)
 	if err != nil {
 		return err
 	}

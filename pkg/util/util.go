@@ -6,21 +6,19 @@ import (
 	"vk-books/pkg/config"
 )
 
-func CreateDirectoryIfNotExists(folderName string) {
+func CreateNecessaryFiles() error {
+
+	// Make Folder
+	if err := os.MkdirAll(config.Folder, os.ModePerm); err != nil {
+		return fmt.Errorf("error creating directory %s: %w", config.Folder, err)
+	}
+
+	// Make File
 	if _, err := os.Stat(config.LocalPath); os.IsNotExist(err) {
-
-		// Create dir
-		err := os.Mkdir(folderName, 0700)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		// Create file
-		err = os.WriteFile(config.LocalPath, []byte(`{"books": []}`), 0644)
-		if err != nil {
-			panic(err)
+		if err := os.WriteFile(config.LocalPath, []byte(`{"books": []}`), 0644); err != nil {
+			return fmt.Errorf("error creating file %s: %w", config.File, err)
 		}
 	}
+
+	return nil
 }
-
-
