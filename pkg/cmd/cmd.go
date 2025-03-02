@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"vk-books/pkg/db"
 )
@@ -19,9 +20,12 @@ func CommandLine(books *db.Books) {
 
 	switch userInput {
 	case "a", "add", "insert":
-		id := books.GenerateUniqueID()
-		newBook := db.GetUserInput(id)
-		books.Add(newBook)
+		id := books.NewID()
+		newBook := db.UserInput(id)
+		err := books.Add(newBook)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "u", "update":
 		// Update
 	case "d", "delete":

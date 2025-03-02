@@ -2,13 +2,13 @@ package db
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"os"
 	"time"
 	"vk-books/pkg/config"
-
-	"github.com/peterh/liner"
+	"vk-books/pkg/util"
 )
 
 type Book struct {
@@ -51,36 +51,49 @@ func (b *Books) ReadFromFile(path string) error {
 }
 
 func (b *Books) Add(newBook Book) error {
-
-	// Append
 	b.BOOKS = append(b.BOOKS, newBook)
+	return b.Save()
+}
+
+func (b *Books) Save() error {
+
+	// Format JSON
+	books, err := json.MarshalIndent(b, "", "  ")
+	if err != nil {
+		return err
+	}
 
 	// Save
-	err := b.SaveToFile(config.LocalPath)
+	err = os.WriteFile(config.LocalPath, books, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to save JSON file to LocalPath: %w", err)
+		return err
 	}
 
-	// Backup Save
-	err = b.SaveToFile(config.BackupPath)
+	// Save Backup
+	err = os.WriteFile(config.BackupPath, books, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to save JSON file to BackupPath: %w", err)
+		return err
 	}
 
-	// Success
+	// Save Backup with Date
+	err = os.WriteFile(config.BackupPathWithDate, books, 0644)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func GetUserInput(id int) Book {
+func UserInput(id int) Book {
 
-	book := PromptWithSuggestion("Book Name:", "")
-	author := PromptWithSuggestion("Author:", "")
-	pages := PromptWithSuggestion("Pages:", "")
-	readCount := PromptWithSuggestion("Read Count:", "1")
-	genre := PromptWithSuggestion("Genre:", "")
-	language := PromptWithSuggestion("Language:", "English")
-	opinion := PromptWithSuggestion("Opinion:", "")
-	date := PromptWithSuggestion("Date:", time.Now().Format("02.01.2006"))
+	book := util.PromptWithSuggestion("Book Name:", "")
+	author := util.PromptWithSuggestion("Author:", "")
+	pages := util.PromptWithSuggestion("Pages:", "")
+	readCount := util.PromptWithSuggestion("Read Count:", "1")
+	genre := util.PromptWithSuggestion("Genre:", "")
+	language := util.PromptWithSuggestion("Language:", "English")
+	opinion := util.PromptWithSuggestion("Opinion:", "")
+	date := util.PromptWithSuggestion("Date:", time.Now().Format("02.01.2006"))
 
 	return Book{
 		ID:        id,
@@ -95,20 +108,7 @@ func GetUserInput(id int) Book {
 	}
 }
 
-func PromptWithSuggestion(name string, suggestion string) string {
-
-	line := liner.NewLiner()
-	defer line.Close()
-
-	input, err := line.PromptWithSuggestion("   "+name+": ", suggestion, -1)
-	if err != nil {
-		panic(err)
-	}
-
-	return input
-}
-
-func (b *Books) GenerateUniqueID() int {
+func (b *Books) NewID() int {
 
 	maxID := 0
 
@@ -121,17 +121,28 @@ func (b *Books) GenerateUniqueID() int {
 	return maxID + 1
 }
 
-func (b *Books) SaveToFile(path string) error {
+func HandleBackupRestore(books *Books) error {
+	useBackup := flag.Bool("backup", false, "Use backup database file")
+	flag.Parse()
 
-	newBook, err := json.MarshalIndent(b, "", "  ")
-	if err != nil {
-		return err
+	if *useBackup {
+		fmt.Println("Using backup database file.")
+
+		// Read from backup
+		if err := books.ReadFromFile(config.BackupPath); err != nil {
+			return fmt.Errorf("failed to load books database from backup: %w", err)
+		}
+
+		// Format JSON
+		formattedBooks, err := json.MarshalIndent(books, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		// Save the backup database as the main database
+		if err := os.WriteFile(config.LocalPath, formattedBooks, 0644); err != nil {
+			return fmt.Errorf("failed to save JSON file from BACKUP database: %w", err)
+		}
 	}
-
-	err = os.WriteFile(path, newBook, 0644)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
