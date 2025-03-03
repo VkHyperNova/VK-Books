@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 	"vk-books/pkg/config"
 	"vk-books/pkg/util"
 )
@@ -51,7 +50,13 @@ func (b *Books) ReadFromFile(path string) error {
 }
 
 func (b *Books) Add(newBook Book) error {
+
+	// Add unique ID
+	newBook.ID = b.NewID()
+
+	// Add
 	b.BOOKS = append(b.BOOKS, newBook)
+
 	return b.Save()
 }
 
@@ -84,28 +89,53 @@ func (b *Books) Save() error {
 	return nil
 }
 
-func UserInput(id int) Book {
+func (b *Books) Update(index int, updatedBook Book) error {
 
-	book := util.PromptWithSuggestion("Book Name:", "")
-	author := util.PromptWithSuggestion("Author:", "")
-	pages := util.PromptWithSuggestion("Pages:", "")
-	readCount := util.PromptWithSuggestion("Read Count:", "1")
-	genre := util.PromptWithSuggestion("Genre:", "")
-	language := util.PromptWithSuggestion("Language:", "English")
-	opinion := util.PromptWithSuggestion("Opinion:", "")
-	date := util.PromptWithSuggestion("Date:", time.Now().Format("02.01.2006"))
+	// Set correct ID
+	updatedBook.ID = b.BOOKS[index].ID
+
+	// Update
+	b.BOOKS[index] = updatedBook
+
+	return b.Save()
+}
+
+func (b *Books) Delete(index int) error {
+	b.BOOKS = append((b.BOOKS)[:index], (b.BOOKS)[index+1:]...)
+	return b.Save()
+}
+
+func (b *Books) FindBook(searchBookID int) (int, []string) {
+
+	for index, foundBook := range b.BOOKS {
+		if foundBook.ID == searchBookID {
+			return index, []string{foundBook.BOOK, foundBook.AUTHOR, foundBook.PAGES, foundBook.READCOUNT, foundBook.GENRE, foundBook.LANGUAGE, foundBook.OPINION, foundBook.DATE}
+		}
+	}
+
+	return -1, nil
+}
+
+func (b *Books) UserInput(suggestions []string) Book {
+
+	var answers []string
+	for index, question := range config.Questions {
+		input := util.PromptWithSuggestion(question, suggestions[index])
+		answers = append(answers, input)
+	}
 
 	return Book{
-		ID:        id,
-		BOOK:      book,
-		AUTHOR:    author,
-		PAGES:     pages,
-		READCOUNT: readCount,
-		GENRE:     genre,
-		LANGUAGE:  language,
-		OPINION:   opinion,
-		DATE:      date,
+		ID:        0,
+		BOOK:      answers[0],
+		AUTHOR:    answers[1],
+		PAGES:     answers[2],
+		READCOUNT: answers[3],
+		GENRE:     answers[4],
+		LANGUAGE:  answers[5],
+		OPINION:   answers[6],
+		DATE:      answers[7],
 	}
+
 }
 
 func (b *Books) NewID() int {

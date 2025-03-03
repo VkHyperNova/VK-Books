@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"vk-books/pkg/config"
 	"vk-books/pkg/db"
 )
 
@@ -19,17 +20,37 @@ func CommandLine(books *db.Books) {
 	userInput = strings.ToLower(userInput)
 
 	switch userInput {
-	case "a", "add", "insert":
-		id := books.NewID()
-		newBook := db.UserInput(id)
+	case "a", "add":
+		newBook := books.UserInput(config.AddSuggestions)
 		err := books.Add(newBook)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		CommandLine(books)
 	case "u", "update":
-		// Update
+		index, updateSuggestions := books.FindBook(userInputID)
+		if index != -1 {
+			updatedBook := books.UserInput(updateSuggestions)
+			err := books.Update(index, updatedBook)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			fmt.Printf("Book %d not found\n", userInputID)
+		}
+
+		CommandLine(books)
 	case "d", "delete":
-		// Delete
+		index, _ := books.FindBook(userInputID)
+		if index != -1 {
+			books.Delete(index)
+		}
+
+		CommandLine(books)
+	default:
+		CommandLine(books)
 	}
+
 
 }
