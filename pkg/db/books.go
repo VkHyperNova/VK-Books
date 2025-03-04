@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"vk-books/pkg/config"
 	"vk-books/pkg/util"
 )
 
 type Book struct {
 	ID        int    `json:"id"`
-	BOOK      string `json:"book"`
+	NAME      string `json:"book"`
 	AUTHOR    string `json:"author"`
 	PAGES     string `json:"pages"`
 	READCOUNT string `json:"readcount"`
@@ -24,6 +25,49 @@ type Book struct {
 
 type Books struct {
 	BOOKS []Book `json:"books"`
+}
+
+func (b *Books) PrintCLI() {
+	// Total pages read
+	totalPages := 0
+	for _, book := range b.BOOKS {
+		pages, err := strconv.Atoi(book.PAGES)
+		if err != nil {
+			fmt.Print(book)
+			fmt.Println(err)
+		}
+		totalPages = totalPages + pages
+	}
+
+	fmt.Printf("Total Pages Read: %d\n", totalPages)
+
+	// Find all Genres
+	var genres []string
+	for _, book := range b.BOOKS {
+		if !util.Contains(genres, book.GENRE) {
+			genres = append(genres, book.GENRE)
+		}
+	}
+
+	// Count all the books by genres
+	for _, genre := range genres {
+		genreCount := 0
+		pagesCount := 0
+
+		for _, book := range b.BOOKS {
+			if book.GENRE == genre {
+				genreCount = genreCount + 1
+				pages, err := strconv.Atoi(book.PAGES)
+				if err != nil {
+					fmt.Print(book)
+					fmt.Println(err)
+				}
+				pagesCount = pagesCount + pages
+			}
+		}
+
+		fmt.Printf("(%d) %s [%d]\n",genreCount,genre, pagesCount)
+	}
 }
 
 func (b *Books) ReadFromFile(path string) error {
@@ -109,7 +153,7 @@ func (b *Books) FindBook(searchBookID int) (int, []string) {
 
 	for index, foundBook := range b.BOOKS {
 		if foundBook.ID == searchBookID {
-			return index, []string{foundBook.BOOK, foundBook.AUTHOR, foundBook.PAGES, foundBook.READCOUNT, foundBook.GENRE, foundBook.LANGUAGE, foundBook.OPINION, foundBook.DATE}
+			return index, []string{foundBook.NAME, foundBook.AUTHOR, foundBook.PAGES, foundBook.READCOUNT, foundBook.GENRE, foundBook.LANGUAGE, foundBook.OPINION, foundBook.DATE}
 		}
 	}
 
@@ -126,7 +170,7 @@ func (b *Books) UserInput(suggestions []string) Book {
 
 	return Book{
 		ID:        0,
-		BOOK:      answers[0],
+		NAME:      answers[0],
 		AUTHOR:    answers[1],
 		PAGES:     answers[2],
 		READCOUNT: answers[3],

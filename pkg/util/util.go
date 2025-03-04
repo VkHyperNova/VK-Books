@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"vk-books/pkg/config"
 
 	"github.com/peterh/liner"
@@ -36,4 +38,30 @@ func PromptWithSuggestion(name string, suggestion string) string {
 	}
 
 	return input
+}
+
+func ClearScreen() {
+
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
+	}
+
+	cmd.Stdout = os.Stdout
+
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, "Error clearing screen:", err)
+	}
+}
+
+func Contains(arr []string, item string) bool {
+	for _, str := range arr {
+		if str == item {
+			return true
+		}
+	}
+	return false
 }
