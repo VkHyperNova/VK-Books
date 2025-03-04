@@ -28,6 +28,8 @@ type Books struct {
 }
 
 func (b *Books) PrintCLI() {
+
+	fmt.Println(config.Cyan + "VK-BOOKS" + config.Reset)
 	// Total pages read
 	totalPages := 0
 	for _, book := range b.BOOKS {
@@ -39,7 +41,8 @@ func (b *Books) PrintCLI() {
 		totalPages = totalPages + pages
 	}
 
-	fmt.Printf("Total Pages Read: %d\n", totalPages)
+	totalPagesRead := fmt.Sprintf("Total Pages Read: %d\n", totalPages)
+	fmt.Print(config.Yellow + totalPagesRead + config.Reset)
 
 	// Find all Genres
 	var genres []string
@@ -51,6 +54,7 @@ func (b *Books) PrintCLI() {
 
 	// Count all the books by genres
 	for _, genre := range genres {
+		var books []Book
 		genreCount := 0
 		pagesCount := 0
 
@@ -63,10 +67,15 @@ func (b *Books) PrintCLI() {
 					fmt.Println(err)
 				}
 				pagesCount = pagesCount + pages
+				books = append(books, book)
 			}
 		}
 
-		fmt.Printf("(%d) %s [%d]\n",genreCount,genre, pagesCount)
+		printGenre := fmt.Sprintf("%s [%d](%d)\n",genre, pagesCount, genreCount)
+		fmt.Print(config.Green + printGenre + config.Reset)
+		for _, book := range books {
+			fmt.Printf("\t%+v\n", book)
+		}
 	}
 }
 
