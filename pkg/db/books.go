@@ -37,8 +37,8 @@ func (b *Books) PrintCLI() {
 	b.FindAndPrintTotalPages()
 	
 	// Print all books by genre
-	genres := b.FindAllGenres()
-	b.PrintBooksByGenres(genres)	
+	genres := b.SortBooks()
+	b.Print(genres)	
 }
 
 
@@ -58,9 +58,8 @@ func (b *Books) FindAndPrintTotalPages() {
 	fmt.Print(config.Yellow + totalPagesRead + config.Reset)
 }
 
-func (b *Books) PrintBooksByGenres(genres []string) {
+func (b *Books) Print(genres []string) {
 	for _, genre := range genres {
-		var books []Book
 		genreCount := 0
 		pagesCount := 0
 
@@ -73,7 +72,6 @@ func (b *Books) PrintBooksByGenres(genres []string) {
 					fmt.Println(err)
 				}
 				pagesCount = pagesCount + pages
-				books = append(books, book)
 			}
 		}
 
@@ -81,14 +79,10 @@ func (b *Books) PrintBooksByGenres(genres []string) {
 		printGenre := fmt.Sprintf("%s [%d](%d)\n", genre, pagesCount, genreCount)
 		fmt.Print(config.Green + printGenre + config.Reset)
 
-		// Print all books in the genre
-		for _, book := range books {
-			fmt.Printf("\t%+v\n", book)
-		}
 	}
 }
 
-func (b *Books) FindAllGenres() []string {
+func (b *Books) SortBooks() []string {
 	var genres []string
 	for _, book := range b.BOOKS {
 		if !util.Contains(genres, book.GENRE) {
