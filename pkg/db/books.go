@@ -57,8 +57,17 @@ func (b *Books) FindAndPrintTotalPages() {
 }
 
 func (b *Books) Print() {
-	for _, b := range b.BOOKS {
-		fmt.Println(color.Yellow, b.ID, color.Reset, color.Green + "\"" + b.NAME + "\"" + color.Reset + color.Cyan + " by " + b.AUTHOR + color.Reset)
+	for _, book := range b.BOOKS {
+		bookID := fmt.Sprint(color.Yellow, book.ID, color.Reset)
+		bookName := fmt.Sprint(color.Green + "\"" + book.NAME + "\"" + color.Reset)
+		bookAuthor := fmt.Sprint(color.Cyan + " by " + book.AUTHOR + color.Reset)
+		bookPages := fmt.Sprint("(" + book.PAGES +" pages)")
+		bookReadCount := fmt.Sprint("[" + book.READCOUNT +"]")
+		bookGenre := fmt.Sprint("(" + book.GENRE + ")")
+		bookLanguage := fmt.Sprint("(" + book.LANGUAGE + ")")
+		bookOpinion := fmt.Sprint("(" + book.OPINION + ")")
+		bookDate := fmt.Sprint(book.DATE)
+		fmt.Println(bookID, bookName, bookAuthor,color.Purple+ "\t"+bookPages + bookReadCount, bookGenre, bookLanguage, bookOpinion, color.Reset, bookDate)
 	}
 }
 
