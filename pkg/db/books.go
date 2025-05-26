@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"vk-books/pkg/color"
 	"vk-books/pkg/config"
 	"vk-books/pkg/util"
 )
@@ -30,18 +31,15 @@ type Books struct {
 func (b *Books) PrintCLI() {
 
 	// Program information
-	fmt.Println(config.Cyan + "VK-BOOKS" + config.Reset)
-	fmt.Println(config.Cyan + "------------------------" + config.Reset)
+	fmt.Println(color.Cyan + "VK-BOOKS" + color.Reset)
+	fmt.Println(color.Cyan + "------------------------" + color.Reset)
 
 	// Print total pages and book count
 	b.FindAndPrintTotalPages()
-	
+
 	// Print all books by genre
-	genres := b.SortBooks()
-	b.Print(genres)	
+	b.Print()
 }
-
-
 
 func (b *Books) FindAndPrintTotalPages() {
 	totalPages := 0
@@ -55,41 +53,13 @@ func (b *Books) FindAndPrintTotalPages() {
 	}
 
 	totalPagesRead := fmt.Sprintf("%d Pages | %d Books\n", totalPages, len(b.BOOKS))
-	fmt.Print(config.Yellow + totalPagesRead + config.Reset)
+	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
 }
 
-func (b *Books) Print(genres []string) {
-	for _, genre := range genres {
-		genreCount := 0
-		pagesCount := 0
-
-		for _, book := range b.BOOKS {
-			if book.GENRE == genre {
-				genreCount = genreCount + 1
-				pages, err := strconv.Atoi(book.PAGES)
-				if err != nil {
-					fmt.Print(book)
-					fmt.Println(err)
-				}
-				pagesCount = pagesCount + pages
-			}
-		}
-
-		// Print Genre
-		printGenre := fmt.Sprintf("%s [%d](%d)\n", genre, pagesCount, genreCount)
-		fmt.Print(config.Green + printGenre + config.Reset)
-
+func (b *Books) Print() {
+	for _, b := range b.BOOKS {
+		fmt.Println(color.Yellow, b.ID, color.Reset, color.Green + "\"" + b.NAME + "\"" + color.Reset + color.Cyan + " by " + b.AUTHOR + color.Reset)
 	}
-}
-
-func (b *Books) SortBooks() []string {
-	var genres []string
-	for _, book := range b.BOOKS {
-		if !util.Contains(genres, book.GENRE) {
-			genres = append(genres, book.GENRE)
-		}
-	}
-	return genres
 }
 
 func (b *Books) ReadFromFile(path string) error {
