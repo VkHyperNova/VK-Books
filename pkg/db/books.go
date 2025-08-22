@@ -41,7 +41,7 @@ func (b *Books) PrintCLI() {
 	b.PrintTotalPagesAndBookCount()
 }
 
-func (b *Books) PrintTotalPagesAndBookCount() {g
+func (b *Books) PrintTotalPagesAndBookCount() {
 	totalPages := 0
 	for _, book := range b.BOOKS {
 		pages, err := strconv.Atoi(book.PAGES)
