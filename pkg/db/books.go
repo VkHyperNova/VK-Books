@@ -34,14 +34,14 @@ func (b *Books) PrintCLI() {
 	fmt.Println(color.Cyan + "VK-BOOKS" + color.Reset)
 	fmt.Println(color.Cyan + "------------------------" + color.Reset)
 
-	// Print total pages and book count
-	b.FindAndPrintTotalPages()
-
 	// Print all books by genre
-	b.Print()
+	b.PrintBooks()
+
+	// Print total pages and book count
+	b.PrintTotalPagesAndBookCount()
 }
 
-func (b *Books) FindAndPrintTotalPages() {
+func (b *Books) PrintTotalPagesAndBookCount() {g
 	totalPages := 0
 	for _, book := range b.BOOKS {
 		pages, err := strconv.Atoi(book.PAGES)
@@ -56,7 +56,7 @@ func (b *Books) FindAndPrintTotalPages() {
 	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
 }
 
-func (b *Books) Print() {
+func (b *Books) PrintBooks() {
 	for _, book := range b.BOOKS {
 		bookID := fmt.Sprint(color.Yellow, book.ID, color.Reset)
 		bookName := fmt.Sprint(color.Green + "\"" + book.NAME + "\"" + color.Reset)
