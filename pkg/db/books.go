@@ -35,13 +35,19 @@ func (b *Books) PrintCLI() {
 	fmt.Println(color.Cyan + "------------------------" + color.Reset)
 
 	// Print all books by genre
-	b.PrintBooks()
+	b.PrintAllBooks()
 
 	// Print total pages and book count
-	b.PrintTotalPagesAndBookCount()
+	b.PrintStats()
 }
 
-func (b *Books) PrintTotalPagesAndBookCount() {
+func (b *Books) PrintStats() {
+
+	totalPagesRead := fmt.Sprintf("\n%d Pages | %d Books\n", b.CountPages(), len(b.BOOKS))
+	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
+}
+
+func (b *Books) CountPages() int {
 	totalPages := 0
 	for _, book := range b.BOOKS {
 		pages, err := strconv.Atoi(book.PAGES)
@@ -52,22 +58,21 @@ func (b *Books) PrintTotalPagesAndBookCount() {
 		totalPages = totalPages + pages
 	}
 
-	totalPagesRead := fmt.Sprintf("%d Pages | %d Books\n", totalPages, len(b.BOOKS))
-	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
+	return totalPages
 }
 
-func (b *Books) PrintBooks() {
+func (b *Books) PrintAllBooks() {
 	for _, book := range b.BOOKS {
 		bookID := fmt.Sprint(color.Yellow, book.ID, color.Reset)
 		bookName := fmt.Sprint(color.Green + "\"" + book.NAME + "\"" + color.Reset)
 		bookAuthor := fmt.Sprint(color.Cyan + " by " + book.AUTHOR + color.Reset)
-		bookPages := fmt.Sprint("(" + book.PAGES +" pages)")
-		bookReadCount := fmt.Sprint("[" + book.READCOUNT +"]")
+		bookPages := fmt.Sprint("(" + book.PAGES + " pages)")
+		bookReadCount := fmt.Sprint("[" + book.READCOUNT + "]")
 		bookGenre := fmt.Sprint("(" + book.GENRE + ")")
 		bookLanguage := fmt.Sprint("(" + book.LANGUAGE + ")")
 		bookOpinion := fmt.Sprint("(" + book.OPINION + ")")
 		bookDate := fmt.Sprint(book.DATE)
-		fmt.Println(bookID, bookName, bookAuthor,color.Purple+ "\t"+bookPages + bookReadCount, bookGenre, bookLanguage, bookOpinion, color.Reset, bookDate)
+		fmt.Println(bookID, bookName, bookAuthor, color.Purple+"\t"+bookPages+bookReadCount, bookGenre, bookLanguage, bookOpinion, color.Reset, bookDate)
 	}
 }
 
