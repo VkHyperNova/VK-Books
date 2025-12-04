@@ -80,7 +80,7 @@ func (b *Books) ReadFromFile(path string) error {
 	}
 	defer file.Close()
 
-	// Read entire file content
+	// Read entire file contents
 	byteValue, err := io.ReadAll(file)
 	if err != nil {
 		return fmt.Errorf("error reading file %s: %w", path, err)
