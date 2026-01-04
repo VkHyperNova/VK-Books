@@ -27,7 +27,7 @@ type Book struct {
 type Books struct {
 	BOOKS []Book `json:"books"`
 }
-
+//test
 func (b *Books) PrintCLI() {
 
 	// Program information
