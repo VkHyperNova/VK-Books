@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -27,7 +26,7 @@ type Book struct {
 type Books struct {
 	BOOKS []Book `json:"books"`
 }
-//test
+
 func (b *Books) PrintCLI() {
 
 	// Program information
@@ -119,19 +118,19 @@ func (b *Books) Save() error {
 	}
 
 	// Save
-	err = os.WriteFile(config.LocalPath, books, 0644)
+	err = os.WriteFile(config.LocalFile, books, 0644)
 	if err != nil {
 		return err
 	}
 
 	// Save Backup
-	err = os.WriteFile(config.BackupPath, books, 0644)
+	err = os.WriteFile(config.BackupFile, books, 0644)
 	if err != nil {
 		return err
 	}
 
 	// Save Backup with Date
-	err = os.WriteFile(config.BackupPathWithDate, books, 0644)
+	err = os.WriteFile(config.BackupFileWithDate, books, 0644)
 	if err != nil {
 		return err
 	}
@@ -199,30 +198,4 @@ func (b *Books) NewID() int {
 	}
 
 	return maxID + 1
-}
-
-func HandleBackupRestore(books *Books) error {
-	useBackup := flag.Bool("backup", false, "Use backup database file")
-	flag.Parse()
-
-	if *useBackup {
-		fmt.Println("Using backup database file.")
-
-		// Read from backup
-		if err := books.ReadFromFile(config.BackupPath); err != nil {
-			return fmt.Errorf("failed to load books database from backup: %w", err)
-		}
-
-		// Format JSON
-		formattedBooks, err := json.MarshalIndent(books, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		// Save the backup database as the main database
-		if err := os.WriteFile(config.LocalPath, formattedBooks, 0644); err != nil {
-			return fmt.Errorf("failed to save JSON file from BACKUP database: %w", err)
-		}
-	}
-	return nil
 }
