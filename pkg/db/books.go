@@ -130,16 +130,16 @@ func (b *Books) Save() error {
 	}
 
 	// Save Backup
-	// err = os.WriteFile(config.BackupFile, books, 0644)
-	// if err != nil {
-	// 	return err
-	// }
+	err = os.WriteFile(config.BackupFile, books, 0644)
+	if err != nil {
+		return err
+	}
 
-	// // Save Backup with Date
-	// err = os.WriteFile(config.BackupFileWithDate, books, 0644)
-	// if err != nil {
-	// 	return err
-	// }
+	// Save Backup with Date
+	err = os.WriteFile(config.BackupFileWithDate, books, 0644)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
