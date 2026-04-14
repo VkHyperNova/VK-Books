@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"time"
 	"vk-books/pkg/color"
 	"vk-books/pkg/config"
 	"vk-books/pkg/util"
@@ -98,7 +99,12 @@ func (b *Books) ReadFromFile(path string) error {
 	return nil
 }
 
-func (b *Books) Add(newBook Book) error {
+func (b *Books) Add() error {
+
+	newBook, err := b.GetUserInput(Book{})
+	if err != nil {
+		return err
+	}
 
 	// Add unique ID
 	newBook.ID = b.NewID()
@@ -124,67 +130,99 @@ func (b *Books) Save() error {
 	}
 
 	// Save Backup
-	err = os.WriteFile(config.BackupFile, books, 0644)
-	if err != nil {
-		return err
-	}
+	// err = os.WriteFile(config.BackupFile, books, 0644)
+	// if err != nil {
+	// 	return err
+	// }
 
-	// Save Backup with Date
-	err = os.WriteFile(config.BackupFileWithDate, books, 0644)
-	if err != nil {
-		return err
-	}
+	// // Save Backup with Date
+	// err = os.WriteFile(config.BackupFileWithDate, books, 0644)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
 
-func (b *Books) Update(index int, updatedBook Book) error {
+func (b *Books) Update(id int) error {
 
-	// Set correct ID
-	updatedBook.ID = b.BOOKS[index].ID
+	if id <= 0 {
+		return fmt.Errorf("invalid ID: %d", id)
+	}
 
-	// Update
-	b.BOOKS[index] = updatedBook
+	index, err := b.findIndex(id)
+	if err != nil {
+		return err
+	}
+
+	updated, err := b.GetUserInput((b.BOOKS)[index])
+	if err != nil {
+		return err
+	}
+
+	(b.BOOKS)[index] = updated
 
 	return b.Save()
 }
 
-func (b *Books) Delete(index int) error {
+func (b *Books) Delete(id int) error {
+
+	index, err := b.findIndex(id)
+	if err != nil {
+		return err
+	}
+
+	confirm := util.Confirm()
+	if !confirm {
+		return fmt.Errorf("Abort")
+	}
+
 	b.BOOKS = append((b.BOOKS)[:index], (b.BOOKS)[index+1:]...)
+
 	return b.Save()
 }
 
-func (b *Books) FindBook(searchBookID int) (int, []string) {
-
-	for index, foundBook := range b.BOOKS {
-		if foundBook.ID == searchBookID {
-			return index, []string{foundBook.NAME, foundBook.AUTHOR, foundBook.PAGES, foundBook.READCOUNT, foundBook.GENRE, foundBook.LANGUAGE, foundBook.OPINION, foundBook.DATE}
+func (b *Books) findIndex(id int) (int, error) {
+	for i, books := range b.BOOKS {
+		if books.ID == id {
+			fmt.Println(books)
+			return i, nil
 		}
 	}
-
-	return -1, nil
+	return -1, fmt.Errorf("item with ID %d not found", id)
 }
 
-func (b *Books) UserInput(suggestions []string) Book {
-
-	var answers []string
-	for index, question := range config.Questions {
-		input := util.PromptWithSuggestion(question, suggestions[index])
-		answers = append(answers, input)
+func (b *Books) GetUserInput(suggestions Book) (Book, error) {
+	prompts := []struct {
+		label  string
+		target *string
+	}{
+		{"Book Name:", &suggestions.NAME},
+		{"Author:", &suggestions.AUTHOR},
+		{"Pages Count:", &suggestions.PAGES},
+		{"Read Count:", &suggestions.READCOUNT},
+		{"Genre:", &suggestions.GENRE},
+		{"Language:", &suggestions.LANGUAGE},
+		{"Opinion:", &suggestions.OPINION},
+		{"Date:", &suggestions.DATE},
 	}
 
-	return Book{
-		ID:        0,
-		NAME:      answers[0],
-		AUTHOR:    answers[1],
-		PAGES:     answers[2],
-		READCOUNT: answers[3],
-		GENRE:     answers[4],
-		LANGUAGE:  answers[5],
-		OPINION:   answers[6],
-		DATE:      answers[7],
+	for _, p := range prompts {
+		val, err := util.PromptWithSuggestion(p.label, *p.target)
+		if err != nil {
+			return Book{}, err
+		}
+		*p.target = val
 	}
 
+	if suggestions.LANGUAGE == "" {
+		suggestions.LANGUAGE = util.AutoDetectLanguage(suggestions.NAME)
+	}
+	if suggestions.DATE == "" {
+		suggestions.DATE = time.Now().Format("02.01.2006")
+	}
+
+	return suggestions, nil
 }
 
 func (b *Books) NewID() int {

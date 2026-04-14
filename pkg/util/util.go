@@ -8,11 +8,23 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"unicode"
 	"vk-books/pkg/color"
 	"vk-books/pkg/config"
 
 	"github.com/peterh/liner"
 )
+
+func AutoDetectLanguage(name string) string {
+
+	for _, char := range name {
+		if unicode.In(char, unicode.Cyrillic) {
+			return "Russian"
+		}
+	}
+
+	return "English"
+}
 
 func ensureFile(path string, content string) error {
 
@@ -36,7 +48,7 @@ func CreateFilesAndFolders() error {
 	}
 
 	if !HardDriveMountCheck() {
-		input := Input("Do you want to continue? (y/n) ")
+		input := Prompt("Do you want to continue? (y/n) ")
 		if strings.ToLower(strings.TrimSpace(input)) != "y" {
 			fmt.Println("Exiting program.")
 			os.Exit(0)
@@ -82,29 +94,28 @@ func HardDriveMountCheck() bool {
 	return false
 }
 
-func Input(prompt string) string {
+func Prompt(Question string) string {
 
-	line := liner.NewLiner()
-	defer line.Close()
+	fmt.Print(color.Cyan, Question, color.Reset)
 
-	userInput, err := line.Prompt(prompt)
-	if err != nil {
-		panic(err)
-	}
-	return userInput
+	var input string
+
+	fmt.Scanln(&input)
+
+	return input
 }
 
-func PromptWithSuggestion(name string, suggestion string) string {
+func PromptWithSuggestion(name string, suggestion string) (string, error) {
 
 	line := liner.NewLiner()
 	defer line.Close()
 
 	input, err := line.PromptWithSuggestion("   "+name+": ", suggestion, -1)
 	if err != nil {
-		panic(err)
+		return input, err
 	}
 
-	return input
+	return input, nil
 }
 
 func ClearScreen() {
@@ -131,4 +142,15 @@ func Contains(arr []string, item string) bool {
 		}
 	}
 	return false
+}
+
+func Confirm() bool {
+
+	input := Prompt("(y/n): ")
+
+	if input == "n" || input == "no" || input == "q" {
+		fmt.Println(color.Red, "Aborted!", color.Reset)
+		return false
+	}
+	return true
 }

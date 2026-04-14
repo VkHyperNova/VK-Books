@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
-	"vk-books/pkg/config"
 	"vk-books/pkg/db"
 	"vk-books/pkg/util"
 )
@@ -15,46 +13,38 @@ func CommandLine(books *db.Books) {
 
 		books.PrintCLI()
 
-		var userInput string = ""
-		var userInputID int = 0
+		var cmd string
+		var id int
 
 		fmt.Print("=> ")
 
-		fmt.Scanln(&userInput, &userInputID)
+		fmt.Scanln(&cmd, &id)
 
-		userInput = strings.ToLower(userInput)
+		cmd = strings.ToLower(cmd)
 
-		switch userInput {
+		switch cmd {
 		case "a", "add":
-			newBook := books.UserInput(config.AddSuggestions)
-			err := books.Add(newBook)
+			err := books.Add()
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
+			} else {
+				fmt.Println("Book added!")
 			}
 
 		case "u", "update":
-			index, updateSuggestions := books.FindBook(userInputID)
-			if index != -1 {
-				updatedBook := books.UserInput(updateSuggestions)
-				err := books.Update(index, updatedBook)
-				if err != nil {
-					log.Fatal(err)
-				}
+			err := books.Update(id)
+			if err != nil {
+				fmt.Println(err)
 			} else {
-				fmt.Printf("Book %d not found\n", userInputID)
+				fmt.Printf("%d is updated!\n", id)
 			}
-
 		case "d", "delete":
-			index, _ := books.FindBook(userInputID)
-			if index != -1 {
-				err := books.Delete(index)
-				if err != nil {
-					log.Fatal(err)
-				} else {
-					fmt.Println("Item removed!")
-				}
+			err := books.Delete(id)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("%d is deleted!\n", id)
 			}
-
 		case "q", "quit":
 			util.ClearScreen()
 			os.Exit(0)
