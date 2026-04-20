@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	"vk-books/pkg/color"
 	"vk-books/pkg/config"
@@ -31,11 +32,9 @@ type Books struct {
 func (b *Books) PrintCLI() {
 
 	// Program information
-	fmt.Println(color.Cyan + "VK-BOOKS" + color.Reset)
-	fmt.Println(color.Cyan + "------------------------" + color.Reset)
-
-	// Print all books by genre
-	b.PrintAllBooks()
+	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
+	fmt.Println(color.Cyan + color.Bold + "VK-BOOKS" + color.Reset)
+	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
 
 	// Print total pages and book count
 	b.PrintStats()
@@ -61,19 +60,35 @@ func (b *Books) CountPages() int {
 	return totalPages
 }
 
+func (b *Books) formatBook(book Book) string {
+    bookID := fmt.Sprintf("%s%v%s", color.Yellow, book.ID, color.Reset)
+    bookName := fmt.Sprintf("%s\"%s\"%s", color.Green, book.NAME, color.Reset)
+    bookAuthor := fmt.Sprintf("%s by %s%s", color.Cyan, book.AUTHOR, color.Reset)
+    bookPages := fmt.Sprintf("(%s pages)", book.PAGES)
+    bookReadCount := fmt.Sprintf("[%s]", book.READCOUNT)
+    bookGenre := fmt.Sprintf("(%s)", book.GENRE)
+    bookLanguage := fmt.Sprintf("(%s)", book.LANGUAGE)
+    bookOpinion := fmt.Sprintf("(%s)", book.OPINION)
+
+    return fmt.Sprintf("%s %s %s %s\t%s%s %s %s %s%s %s",
+        bookID, bookName, bookAuthor,
+        color.Purple, bookPages, bookReadCount,
+        bookGenre, bookLanguage, bookOpinion, color.Reset,
+        book.DATE)
+}
+
+func (b *Books) Search(searchBook string) {
+    for _, book := range b.BOOKS {
+        if strings.Contains(strings.ToLower(book.NAME), strings.ToLower(searchBook)) {
+            fmt.Println(b.formatBook(book))
+        }
+    }
+}
+
 func (b *Books) PrintAllBooks() {
-	for _, book := range b.BOOKS {
-		bookID := fmt.Sprint(color.Yellow, book.ID, color.Reset)
-		bookName := fmt.Sprint(color.Green + "\"" + book.NAME + "\"" + color.Reset)
-		bookAuthor := fmt.Sprint(color.Cyan + " by " + book.AUTHOR + color.Reset)
-		bookPages := fmt.Sprint("(" + book.PAGES + " pages)")
-		bookReadCount := fmt.Sprint("[" + book.READCOUNT + "]")
-		bookGenre := fmt.Sprint("(" + book.GENRE + ")")
-		bookLanguage := fmt.Sprint("(" + book.LANGUAGE + ")")
-		bookOpinion := fmt.Sprint("(" + book.OPINION + ")")
-		bookDate := fmt.Sprint(book.DATE)
-		fmt.Println(bookID, bookName, bookAuthor, color.Purple+"\t"+bookPages+bookReadCount, bookGenre, bookLanguage, bookOpinion, color.Reset, bookDate)
-	}
+    for _, book := range b.BOOKS {
+        fmt.Println(b.formatBook(book))
+    }
 }
 
 func (b *Books) ReadFromFile(path string) error {
@@ -166,6 +181,10 @@ func (b *Books) Update(id int) error {
 }
 
 func (b *Books) Delete(id int) error {
+
+	if id <= 0 {
+		return fmt.Errorf("invalid ID: %d", id)
+	}
 
 	index, err := b.findIndex(id)
 	if err != nil {

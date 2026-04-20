@@ -8,10 +8,10 @@ import (
 	"vk-books/pkg/util"
 )
 
-func CommandLine(books *db.Books) {
+func CommandLine(b *db.Books) {
 	for {
 
-		books.PrintCLI()
+		b.PrintCLI()
 
 		var cmd string
 		var id int
@@ -24,7 +24,7 @@ func CommandLine(books *db.Books) {
 
 		switch cmd {
 		case "a", "add":
-			err := books.Add()
+			err := b.Add()
 			if err != nil {
 				fmt.Println(err)
 			} else {
@@ -32,24 +32,26 @@ func CommandLine(books *db.Books) {
 			}
 
 		case "u", "update":
-			err := books.Update(id)
+			err := b.Update(id)
 			if err != nil {
 				fmt.Println(err)
 			} else {
 				fmt.Printf("%d is updated!\n", id)
 			}
 		case "d", "delete":
-			err := books.Delete(id)
+			err := b.Delete(id)
 			if err != nil {
 				fmt.Println(err)
 			} else {
 				fmt.Printf("%d is deleted!\n", id)
 			}
+		case "showall":
+			b.PrintAllBooks()
 		case "q", "quit":
 			util.ClearScreen()
 			os.Exit(0)
 		default:
-			util.ClearScreen()
+			b.Search(cmd)
 		}
 	}
 }
