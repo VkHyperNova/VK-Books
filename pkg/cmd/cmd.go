@@ -50,6 +50,8 @@ func CommandLine(b *db.Books) {
 		case "q", "quit":
 			util.ClearScreen()
 			os.Exit(0)
+		case "":
+			fmt.Println("Please enter a command.")
 		default:
 			b.Search(cmd)
 		}

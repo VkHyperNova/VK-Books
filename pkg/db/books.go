@@ -37,7 +37,21 @@ func (b *Books) PrintCLI() {
 	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
 
 	// Print total pages and book count
+	b.PrintLatestBooks(3)
 	b.PrintStats()
+}
+
+func (b *Books) PrintLatestBooks(numberOfBooks int) {
+    if numberOfBooks <= 0 {
+        return
+    }
+    start := len(b.BOOKS) - numberOfBooks
+    if start < 0 {
+        start = 0
+    }
+    for _, book := range b.BOOKS[start:] {
+        fmt.Println(b.formatBook(book))
+    }
 }
 
 func (b *Books) PrintStats() {
