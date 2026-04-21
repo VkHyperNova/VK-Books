@@ -8,52 +8,48 @@ import (
 	"vk-books/pkg/util"
 )
 
-func CommandLine(b *db.Books) {
+func Run(b *db.Books) {
 	for {
 
-		b.PrintCLI()
+		b.PrintDashboard()
 
-		var cmd string
+		var command string
 		var id int
 
 		fmt.Print("=> ")
 
-		fmt.Scanln(&cmd, &id)
+		fmt.Scanln(&command, &id)
 
-		cmd = strings.ToLower(cmd)
+		command = strings.ToLower(command)
 
-		switch cmd {
+		switch command {
 		case "a", "add":
-			err := b.Add()
-			if err != nil {
+			if err := b.Add(); err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Println("Book added!")
+				fmt.Println("Added!")
 			}
-
 		case "u", "update":
-			err := b.Update(id)
-			if err != nil {
+			if err := b.Update(id); err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Printf("%d is updated!\n", id)
+				fmt.Println("Updated!")
 			}
 		case "d", "delete":
-			err := b.Delete(id)
-			if err != nil {
+			if err := b.Delete(id); err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Printf("%d is deleted!\n", id)
+				fmt.Println("Deleted!")
 			}
-		case "showall":
-			b.PrintAllBooks()
+		case "showall", "all":
+			b.PrintAll()
 		case "q", "quit":
-			util.ClearScreen()
+			util.ClearTerminal()
 			os.Exit(0)
 		case "":
-			fmt.Println("Please enter a command.")
+			fmt.Println("(add, update, delete, all, q or type book name)")
 		default:
-			b.Search(cmd)
+			b.Search(command)
 		}
 	}
 }

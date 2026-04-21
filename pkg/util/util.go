@@ -15,7 +15,7 @@ import (
 	"github.com/peterh/liner"
 )
 
-func AutoDetectLanguage(name string) string {
+func DetectLanguage(name string) string {
 
 	for _, char := range name {
 		if unicode.In(char, unicode.Cyrillic) {
@@ -26,35 +26,20 @@ func AutoDetectLanguage(name string) string {
 	return "English"
 }
 
-func ensureFile(path string, content string) error {
+func InitStorage() error {
 
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return fmt.Errorf("error creating directory for %s: %w", path, err)
-	}
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-			return fmt.Errorf("error creating file %s: %w", path, err)
-		}
-	}
-
-	return nil
-}
-
-func CreateFilesAndFolders() error {
-	
-	if err := ensureFile(config.LocalFile, config.DefaultContent); err != nil {
+	if err := createFileIfNotExists(config.LocalFile, config.DefaultContent); err != nil {
 		return err
 	}
 
-	if !HardDriveMountCheck() {
-		input := Prompt("Do you want to continue? (y/n) ")
+	if !IsBackupDriveMounted() {
+		input := PromptInput("Do you want to continue? (y/n) ")
 		if strings.ToLower(strings.TrimSpace(input)) != "y" {
 			fmt.Println("Exiting program.")
 			os.Exit(0)
 		}
 	} else {
-		if err := ensureFile(config.BackupFile, config.DefaultContent); err != nil {
+		if err := createFileIfNotExists(config.BackupFile, config.DefaultContent); err != nil {
 			return err
 		}
 	}
@@ -62,7 +47,7 @@ func CreateFilesAndFolders() error {
 	return nil
 }
 
-func HardDriveMountCheck() bool {
+func IsBackupDriveMounted() bool {
 	if runtime.GOOS != "linux" {
 		fmt.Println("This program only works on Linux.")
 		return false
@@ -94,18 +79,7 @@ func HardDriveMountCheck() bool {
 	return false
 }
 
-func Prompt(Question string) string {
-
-	fmt.Print(color.Cyan, Question, color.Reset)
-
-	var input string
-
-	fmt.Scanln(&input)
-
-	return input
-}
-
-func PromptWithSuggestion(name string, suggestion string) (string, error) {
+func InputWithSuggestion(name string, suggestion string) (string, error) {
 
 	line := liner.NewLiner()
 	defer line.Close()
@@ -118,7 +92,7 @@ func PromptWithSuggestion(name string, suggestion string) (string, error) {
 	return input, nil
 }
 
-func ClearScreen() {
+func ClearTerminal() {
 
 	var cmd *exec.Cmd
 
@@ -135,22 +109,39 @@ func ClearScreen() {
 	}
 }
 
-func Contains(arr []string, item string) bool {
-	for _, str := range arr {
-		if str == item {
-			return true
-		}
-	}
-	return false
-}
+func PromptConfirm() bool {
 
-func Confirm() bool {
-
-	input := Prompt("(y/n): ")
+	input := PromptInput("(y/n): ")
 
 	if input == "n" || input == "no" || input == "q" {
 		fmt.Println(color.Red, "Aborted!", color.Reset)
 		return false
 	}
 	return true
+}
+
+func PromptInput(Question string) string {
+
+	fmt.Print(color.Cyan, Question, color.Reset)
+
+	var input string
+
+	fmt.Scanln(&input)
+
+	return input
+}
+
+func createFileIfNotExists(path string, content string) error {
+
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("error creating directory for %s: %w", path, err)
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			return fmt.Errorf("error creating file %s: %w", path, err)
+		}
+	}
+
+	return nil
 }

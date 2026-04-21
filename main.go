@@ -12,17 +12,16 @@ import (
 
 func main() {
 
-	if err := util.CreateFilesAndFolders(); err != nil {
-		fmt.Println("Error creating files/folders:", err)
-		os.Exit(1)
+	if err := util.InitStorage(); err != nil {
+		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
 	b := db.Books{}
 
-	err := b.ReadFromFile(config.LocalFile)
+	err := b.LoadFromFile(config.LocalFile)
 	if err != nil {
-		log.Fatalf("Fatal error: failed to load walkings database: %v", err)
+		log.Fatalf("Failed to load books: %v", err)
 	}
 
-	cmd.CommandLine(&b)
+	cmd.Run(&b)
 }

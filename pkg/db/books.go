@@ -14,102 +14,24 @@ import (
 )
 
 type Book struct {
-	ID        int    `json:"id"`
-	NAME      string `json:"book"`
-	AUTHOR    string `json:"author"`
-	PAGES     string `json:"pages"`
-	READCOUNT string `json:"readcount"`
-	GENRE     string `json:"genre"`
-	LANGUAGE  string `json:"language"`
-	OPINION   string `json:"opinion"`
-	DATE      string `json:"date"`
+	Id        int    `json:"id"`
+	Name      string `json:"book"`
+	Author    string `json:"author"`
+	Pages     string `json:"pages"`
+	ReadCount string `json:"readcount"`
+	Genre     string `json:"genre"`
+	Language  string `json:"language"`
+	Opinion   string `json:"opinion"`
+	Date      string `json:"date"`
 }
 
 type Books struct {
-	BOOKS []Book `json:"books"`
+	Books []Book `json:"books"`
 }
 
-func (b *Books) PrintCLI() {
+/* Operations */
 
-	// Program information
-	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
-	fmt.Println(color.Cyan + color.Bold + "VK-BOOKS" + color.Reset)
-	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
-
-	// Print total pages and book count
-	b.PrintLatestBooks(3)
-	b.PrintStats()
-}
-
-func (b *Books) PrintLatestBooks(numberOfBooks int) {
-
-	fmt.Printf("%s\n", color.Yellow + color.Bold + color.Italic + "Latest Books: " + color.Reset)
-
-    if numberOfBooks <= 0 {
-        return
-    }
-    start := len(b.BOOKS) - numberOfBooks
-    if start < 0 {
-        start = 0
-    }
-    for _, book := range b.BOOKS[start:] {
-        fmt.Println(b.formatBook(book))
-    }
-}
-
-func (b *Books) PrintStats() {
-
-	totalPagesRead := fmt.Sprintf("\n%d Pages | %d Books\n", b.CountPages(), len(b.BOOKS))
-	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
-}
-
-func (b *Books) CountPages() int {
-	totalPages := 0
-	for _, book := range b.BOOKS {
-		pages, err := strconv.Atoi(book.PAGES)
-		if err != nil {
-			fmt.Print(book)
-			fmt.Println(err)
-		}
-		totalPages = totalPages + pages
-	}
-
-	return totalPages
-}
-
-func (b *Books) formatBook(book Book) string {
-    bookID := fmt.Sprintf("%s%v%s", color.Yellow, book.ID, color.Reset)
-    bookName := fmt.Sprintf("%s\"%s\"%s", color.Green, book.NAME, color.Reset)
-    bookAuthor := fmt.Sprintf("%s by %s%s", color.Cyan, book.AUTHOR, color.Reset)
-    bookPages := fmt.Sprintf("(%s pages)", book.PAGES)
-    bookReadCount := fmt.Sprintf("[%s]", book.READCOUNT)
-    bookGenre := fmt.Sprintf("(%s)", book.GENRE)
-    bookLanguage := fmt.Sprintf("(%s)", book.LANGUAGE)
-    bookOpinion := fmt.Sprintf("(%s)", book.OPINION)
-
-    return fmt.Sprintf("%s %s %s %s\t%s%s %s %s %s%s %s",
-        bookID, bookName, bookAuthor,
-        color.Purple, bookPages, bookReadCount,
-        bookGenre, bookLanguage, bookOpinion, color.Reset,
-        book.DATE)
-}
-
-func (b *Books) Search(searchBook string) {
-	fmt.Printf("%s\n", color.Yellow + color.Bold + color.Italic + "Found Books: " + color.Reset)
-    for _, book := range b.BOOKS {
-        if strings.Contains(strings.ToLower(book.NAME), strings.ToLower(searchBook)) {
-            fmt.Println(b.formatBook(book))
-        }
-    }
-}
-
-func (b *Books) PrintAllBooks() {
-    for _, book := range b.BOOKS {
-        fmt.Println(b.formatBook(book))
-    }
-}
-
-func (b *Books) ReadFromFile(path string) error {
+func (b *Books) LoadFromFile(path string) error {
 
 	// Open file
 	file, err := os.Open(path)
@@ -132,23 +54,148 @@ func (b *Books) ReadFromFile(path string) error {
 	return nil
 }
 
+func (b *Books) PrintDashboard() {
+
+	// Program information
+	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
+	fmt.Println(color.Cyan + color.Bold + "VK-BOOKS" + color.Reset)
+	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
+	
+
+	// Print total pages and book count
+	b.PrintLatest(3)
+	b.PrintSummary()
+}
+
 func (b *Books) Add() error {
 
-	newBook, err := b.GetUserInput(Book{})
+	newBook, err := b.promptBookInput(Book{})
 	if err != nil {
 		return err
 	}
 
 	// Add unique ID
-	newBook.ID = b.NewID()
+	newBook.Id = b.nextID()
 
 	// Add
-	b.BOOKS = append(b.BOOKS, newBook)
+	b.Books = append(b.Books, newBook)
 
-	return b.Save()
+	return b.saveToFile()
 }
 
-func (b *Books) Save() error {
+func (b *Books) Update(id int) error {
+
+	if id <= 0 {
+		return fmt.Errorf("invalid ID: %d", id)
+	}
+
+	index, err := b.indexOf(id)
+	if err != nil {
+		return err
+	}
+
+	updated, err := b.promptBookInput((b.Books)[index])
+	if err != nil {
+		return err
+	}
+
+	(b.Books)[index] = updated
+
+	return b.saveToFile()
+}
+
+func (b *Books) Delete(id int) error {
+
+	if id <= 0 {
+		return fmt.Errorf("invalid ID: %d", id)
+	}
+
+	index, err := b.indexOf(id)
+	if err != nil {
+		return err
+	}
+
+	confirm := util.PromptConfirm()
+	if !confirm {
+		return fmt.Errorf("Abort")
+	}
+
+	b.Books = append((b.Books)[:index], (b.Books)[index+1:]...)
+
+	return b.saveToFile()
+}
+
+func (b *Books) PrintLatest(numberOfBooks int) {
+
+	fmt.Printf("%s\n", color.Yellow+color.Bold+color.Italic+"Latest Books: "+color.Reset)
+
+	if numberOfBooks <= 0 {
+		return
+	}
+	start := len(b.Books) - numberOfBooks
+	if start < 0 {
+		start = 0
+	}
+	for _, book := range b.Books[start:] {
+		fmt.Println(b.formatBook(book))
+	}
+}
+
+func (b *Books) PrintSummary() {
+
+	totalPagesRead := fmt.Sprintf("\n%d Pages | %d Books\n", b.totalPages(), len(b.Books))
+	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
+}
+
+func (b *Books) Search(searchBook string) {
+	fmt.Printf("%s\n", color.Yellow+color.Bold+color.Italic+"Found Books: "+color.Reset)
+	for _, book := range b.Books {
+		if strings.Contains(strings.ToLower(book.Name), strings.ToLower(searchBook)) {
+			fmt.Println(b.formatBook(book))
+		}
+	}
+}
+
+func (b *Books) PrintAll() {
+	for _, book := range b.Books {
+		fmt.Println(b.formatBook(book))
+	}
+}
+
+/* Helpers */
+
+func (b *Books) totalPages() int {
+	totalPages := 0
+	for _, book := range b.Books {
+		pages, err := strconv.Atoi(book.Pages)
+		if err != nil {
+			fmt.Print(book)
+			fmt.Println(err)
+		}
+		totalPages = totalPages + pages
+	}
+
+	return totalPages
+}
+
+func (b *Books) formatBook(book Book) string {
+	bookID := fmt.Sprintf("%s%v%s", color.Yellow, book.Id, color.Reset)
+	bookName := fmt.Sprintf("%s\"%s\"%s", color.Green, book.Name, color.Reset)
+	bookAuthor := fmt.Sprintf("%s by %s%s", color.Cyan, book.Author, color.Reset)
+	bookPages := fmt.Sprintf("(%s pages)", book.Pages)
+	bookReadCount := fmt.Sprintf("[%s]", book.ReadCount)
+	bookGenre := fmt.Sprintf("(%s)", book.Genre)
+	bookLanguage := fmt.Sprintf("(%s)", book.Language)
+	bookOpinion := fmt.Sprintf("(%s)", book.Opinion)
+
+	return fmt.Sprintf("%s %s %s %s\t%s%s %s %s %s%s %s",
+		bookID, bookName, bookAuthor,
+		color.Purple, bookPages, bookReadCount,
+		bookGenre, bookLanguage, bookOpinion, color.Reset,
+		book.Date)
+}
+
+func (b *Books) saveToFile() error {
 
 	// Format JSON
 	books, err := json.MarshalIndent(b, "", "  ")
@@ -177,51 +224,9 @@ func (b *Books) Save() error {
 	return nil
 }
 
-func (b *Books) Update(id int) error {
-
-	if id <= 0 {
-		return fmt.Errorf("invalid ID: %d", id)
-	}
-
-	index, err := b.findIndex(id)
-	if err != nil {
-		return err
-	}
-
-	updated, err := b.GetUserInput((b.BOOKS)[index])
-	if err != nil {
-		return err
-	}
-
-	(b.BOOKS)[index] = updated
-
-	return b.Save()
-}
-
-func (b *Books) Delete(id int) error {
-
-	if id <= 0 {
-		return fmt.Errorf("invalid ID: %d", id)
-	}
-
-	index, err := b.findIndex(id)
-	if err != nil {
-		return err
-	}
-
-	confirm := util.Confirm()
-	if !confirm {
-		return fmt.Errorf("Abort")
-	}
-
-	b.BOOKS = append((b.BOOKS)[:index], (b.BOOKS)[index+1:]...)
-
-	return b.Save()
-}
-
-func (b *Books) findIndex(id int) (int, error) {
-	for i, books := range b.BOOKS {
-		if books.ID == id {
+func (b *Books) indexOf(id int) (int, error) {
+	for i, books := range b.Books {
+		if books.Id == id {
 			fmt.Println(books)
 			return i, nil
 		}
@@ -229,46 +234,46 @@ func (b *Books) findIndex(id int) (int, error) {
 	return -1, fmt.Errorf("item with ID %d not found", id)
 }
 
-func (b *Books) GetUserInput(suggestions Book) (Book, error) {
+func (b *Books) promptBookInput(suggestions Book) (Book, error) {
 	prompts := []struct {
 		label  string
 		target *string
 	}{
-		{"Book Name:", &suggestions.NAME},
-		{"Author:", &suggestions.AUTHOR},
-		{"Pages Count:", &suggestions.PAGES},
-		{"Read Count:", &suggestions.READCOUNT},
-		{"Genre:", &suggestions.GENRE},
-		{"Language:", &suggestions.LANGUAGE},
-		{"Opinion:", &suggestions.OPINION},
-		{"Date:", &suggestions.DATE},
+		{"Book Name:", &suggestions.Name},
+		{"Author:", &suggestions.Author},
+		{"Pages Count:", &suggestions.Pages},
+		{"Read Count:", &suggestions.ReadCount},
+		{"Genre:", &suggestions.Genre},
+		{"Language:", &suggestions.Language},
+		{"Opinion:", &suggestions.Opinion},
+		{"Date:", &suggestions.Date},
 	}
 
 	for _, p := range prompts {
-		val, err := util.PromptWithSuggestion(p.label, *p.target)
+		val, err := util.InputWithSuggestion(p.label, *p.target)
 		if err != nil {
 			return Book{}, err
 		}
 		*p.target = val
 	}
 
-	if suggestions.LANGUAGE == "" {
-		suggestions.LANGUAGE = util.AutoDetectLanguage(suggestions.NAME)
+	if suggestions.Language == "" {
+		suggestions.Language = util.DetectLanguage(suggestions.Name)
 	}
-	if suggestions.DATE == "" {
-		suggestions.DATE = time.Now().Format("02.01.2006")
+	if suggestions.Date == "" {
+		suggestions.Date = time.Now().Format("02.01.2006")
 	}
 
 	return suggestions, nil
 }
 
-func (b *Books) NewID() int {
+func (b *Books) nextID() int {
 
 	maxID := 0
 
-	for _, book := range b.BOOKS {
-		if book.ID > maxID {
-			maxID = book.ID
+	for _, book := range b.Books {
+		if book.Id > maxID {
+			maxID = book.Id
 		}
 	}
 
