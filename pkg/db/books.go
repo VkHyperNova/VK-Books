@@ -42,6 +42,9 @@ func (b *Books) PrintCLI() {
 }
 
 func (b *Books) PrintLatestBooks(numberOfBooks int) {
+
+	fmt.Printf("%s\n", color.Yellow + color.Bold + color.Italic + "Latest Books: " + color.Reset)
+
     if numberOfBooks <= 0 {
         return
     }
@@ -92,6 +95,7 @@ func (b *Books) formatBook(book Book) string {
 }
 
 func (b *Books) Search(searchBook string) {
+	fmt.Printf("%s\n", color.Yellow + color.Bold + color.Italic + "Found Books: " + color.Reset)
     for _, book := range b.BOOKS {
         if strings.Contains(strings.ToLower(book.NAME), strings.ToLower(searchBook)) {
             fmt.Println(b.formatBook(book))
