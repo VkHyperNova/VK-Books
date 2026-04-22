@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"vk-books/pkg/cmd"
 	"vk-books/pkg/config"
 	"vk-books/pkg/db"
