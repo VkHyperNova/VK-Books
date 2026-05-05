@@ -104,22 +104,22 @@ func (b *Books) Update(id int) error {
 }
 
 func (b *Books) Delete(id int) error {
-    if id <= 0 {
-        return fmt.Errorf("invalid ID: %d", id)
-    }
-    index, err := b.indexOf(id)
-    if err != nil {
-        return err
-    }
-    confirm, err := util.PromptWithSuggestion("(y/n): ", "n")
-    if err != nil {
-        return err
-    }
-    if confirm != "y" && confirm != "yes" {
-        return fmt.Errorf("Aborted")
-    }
-    b.Books = append(b.Books[:index], b.Books[index+1:]...)
-    return b.save()
+	if id <= 0 {
+		return fmt.Errorf("invalid ID: %d", id)
+	}
+	index, err := b.indexOf(id)
+	if err != nil {
+		return err
+	}
+	confirm, err := util.PromptWithSuggestion("(y/n): ", "n")
+	if err != nil {
+		return err
+	}
+	if confirm != "y" && confirm != "yes" {
+		return fmt.Errorf("Aborted")
+	}
+	b.Books = append(b.Books[:index], b.Books[index+1:]...)
+	return b.save()
 }
 
 func (b *Books) PrintLatest(numberOfBooks int) {
@@ -145,13 +145,13 @@ func (b *Books) PrintSummary() {
 }
 
 func (b *Books) Search() {
-    searchBook := util.ReadLine("Search: ")
-    fmt.Printf("%s\n", color.Yellow+color.Bold+color.Italic+"Found Books: "+color.Reset)
-    for _, book := range b.Books {
-        if strings.Contains(strings.ToLower(book.Name), strings.ToLower(searchBook)) {
-            fmt.Println(b.formatBook(book))
-        }
-    }
+	searchBook := util.ReadLine("Search: ")
+	fmt.Printf("%s\n", color.Yellow+color.Bold+color.Italic+"Found Books: "+color.Reset)
+	for _, book := range b.Books {
+		if strings.Contains(strings.ToLower(book.Name), strings.ToLower(searchBook)) {
+			fmt.Println(b.formatBook(book))
+		}
+	}
 }
 
 func (b *Books) History() {
@@ -238,6 +238,15 @@ func (b *Books) indexOf(id int) (int, error) {
 }
 
 func (b *Books) promptBookInput(suggestions Book) (Book, error) {
+
+	if suggestions.Language == "" {
+		suggestions.Language = util.DetectLanguage(suggestions.Name)
+	}
+	
+	if suggestions.Date == "" {
+		suggestions.Date = time.Now().Format("02.01.2006")
+	}
+
 	prompts := []struct {
 		label  string
 		target *string
@@ -258,13 +267,6 @@ func (b *Books) promptBookInput(suggestions Book) (Book, error) {
 			return Book{}, err
 		}
 		*p.target = val
-	}
-
-	if suggestions.Language == "" {
-		suggestions.Language = util.DetectLanguage(suggestions.Name)
-	}
-	if suggestions.Date == "" {
-		suggestions.Date = time.Now().Format("02.01.2006")
 	}
 
 	return suggestions, nil
