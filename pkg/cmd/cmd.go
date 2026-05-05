@@ -2,25 +2,24 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
+	"vk-books/pkg/color"
 	"vk-books/pkg/db"
 	"vk-books/pkg/util"
 )
 
 func Run(b *db.Books) {
+
+	b.PrintDashboard()
+
 	for {
 
-		b.PrintDashboard()
+		fmt.Println(color.Yellow + "\n< add, update, delete, history, q >" + color.Reset)
 
-		var command string
-		var id int
-
-		fmt.Print("=> ")
-
-		fmt.Scanln(&command, &id)
-
-		command = strings.ToLower(command)
+		command, id := util.ReadInput()
+		if command == "" {
+			util.ClearTerminal()
+			continue
+		}
 
 		switch command {
 		case "a", "add":
@@ -41,15 +40,12 @@ func Run(b *db.Books) {
 			} else {
 				fmt.Println("Deleted!")
 			}
-		case "showall", "all":
-			b.PrintAll()
+		case "history", "h":
+			b.History()
 		case "q", "quit":
-			util.ClearTerminal()
-			os.Exit(0)
-		case "":
-			fmt.Println("(add, update, delete, all, q or type book name)")
-		default:
-			b.Search(command)
+			return
+		case "search", "s":
+			b.Search()
 		}
 	}
 }

@@ -10,7 +10,9 @@ import (
 
 func main() {
 
-	if err := util.InitStorage(); err != nil {
+	defer util.Line.Close()
+
+	if err := util.InitLocalStorage(); err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 

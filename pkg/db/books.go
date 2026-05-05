@@ -60,7 +60,6 @@ func (b *Books) PrintDashboard() {
 	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
 	fmt.Println(color.Cyan + color.Bold + "VK-BOOKS" + color.Reset)
 	fmt.Println(color.Cyan + color.Bold + "------------------------" + color.Reset)
-	
 
 	// Print total pages and book count
 	b.PrintLatest(3)
@@ -80,7 +79,7 @@ func (b *Books) Add() error {
 	// Add
 	b.Books = append(b.Books, newBook)
 
-	return b.saveToFile()
+	return b.save()
 }
 
 func (b *Books) Update(id int) error {
@@ -101,28 +100,26 @@ func (b *Books) Update(id int) error {
 
 	(b.Books)[index] = updated
 
-	return b.saveToFile()
+	return b.save()
 }
 
 func (b *Books) Delete(id int) error {
-
-	if id <= 0 {
-		return fmt.Errorf("invalid ID: %d", id)
-	}
-
-	index, err := b.indexOf(id)
-	if err != nil {
-		return err
-	}
-
-	confirm := util.PromptConfirm()
-	if !confirm {
-		return fmt.Errorf("Abort")
-	}
-
-	b.Books = append((b.Books)[:index], (b.Books)[index+1:]...)
-
-	return b.saveToFile()
+    if id <= 0 {
+        return fmt.Errorf("invalid ID: %d", id)
+    }
+    index, err := b.indexOf(id)
+    if err != nil {
+        return err
+    }
+    confirm, err := util.PromptWithSuggestion("(y/n): ", "n")
+    if err != nil {
+        return err
+    }
+    if confirm != "y" && confirm != "yes" {
+        return fmt.Errorf("Aborted")
+    }
+    b.Books = append(b.Books[:index], b.Books[index+1:]...)
+    return b.save()
 }
 
 func (b *Books) PrintLatest(numberOfBooks int) {
@@ -147,16 +144,17 @@ func (b *Books) PrintSummary() {
 	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
 }
 
-func (b *Books) Search(searchBook string) {
-	fmt.Printf("%s\n", color.Yellow+color.Bold+color.Italic+"Found Books: "+color.Reset)
-	for _, book := range b.Books {
-		if strings.Contains(strings.ToLower(book.Name), strings.ToLower(searchBook)) {
-			fmt.Println(b.formatBook(book))
-		}
-	}
+func (b *Books) Search() {
+    searchBook := util.ReadLine("Search: ")
+    fmt.Printf("%s\n", color.Yellow+color.Bold+color.Italic+"Found Books: "+color.Reset)
+    for _, book := range b.Books {
+        if strings.Contains(strings.ToLower(book.Name), strings.ToLower(searchBook)) {
+            fmt.Println(b.formatBook(book))
+        }
+    }
 }
 
-func (b *Books) PrintAll() {
+func (b *Books) History() {
 	for _, book := range b.Books {
 		fmt.Println(b.formatBook(book))
 	}
@@ -195,7 +193,7 @@ func (b *Books) formatBook(book Book) string {
 		book.Date)
 }
 
-func (b *Books) saveToFile() error {
+func (b *Books) save() error {
 
 	// Format JSON
 	books, err := json.MarshalIndent(b, "", "  ")
@@ -206,6 +204,11 @@ func (b *Books) saveToFile() error {
 	// Save
 	err = os.WriteFile(config.LocalFile, books, 0644)
 	if err != nil {
+		return err
+	}
+
+	// Mount drive
+	if err := util.InitBackupStorage(); err != nil {
 		return err
 	}
 
@@ -250,7 +253,7 @@ func (b *Books) promptBookInput(suggestions Book) (Book, error) {
 	}
 
 	for _, p := range prompts {
-		val, err := util.InputWithSuggestion(p.label, *p.target)
+		val, err := util.PromptWithSuggestion(p.label, *p.target)
 		if err != nil {
 			return Book{}, err
 		}
