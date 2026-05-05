@@ -239,6 +239,14 @@ func (b *Books) indexOf(id int) (int, error) {
 
 func (b *Books) promptBookInput(suggestions Book) (Book, error) {
 
+	if suggestions.Pages == "" {
+		suggestions.Pages = "1"
+	}
+
+	if suggestions.ReadCount == "" {
+		suggestions.ReadCount = "1"
+	}
+
 	if suggestions.Language == "" {
 		suggestions.Language = util.DetectLanguage(suggestions.Name)
 	}
