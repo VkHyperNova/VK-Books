@@ -33,7 +33,7 @@ func InitBackupStorage() error {
 	}
 
 	if !mounted {
-		input, err := PromptWithSuggestion("Drive not mounted. Try to mount it? (y/n) ", "y")
+		input, err := PromptWithSuggestion("VK DATA not mounted. Try to mount it? (y/n) ", "y")
 		if err != nil {
 			return err
 		}

@@ -160,6 +160,75 @@ func (b *Books) History() {
 	}
 }
 
+func (b *Books) Import() error {
+
+	input, err := util.PromptWithSuggestion("Import db from d drive? (y/n) ", "n")
+	if err != nil {
+		return err
+	}
+
+	if input == "y" || input == "yes" {
+
+		if err := util.InitBackupStorage(); err != nil {
+			return err
+		}
+
+		if err := b.LoadFromFile(config.BackupFile); err != nil {
+			return fmt.Errorf("load from file: %w", err)
+		}
+
+		books, err := json.MarshalIndent(b, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		if err := os.WriteFile(config.LocalFile, books, 0644); err != nil {
+			return err
+		}
+
+		fmt.Printf("Database imported from %s\nPress Enter!", config.BackupFile)
+		return nil
+	}
+
+	fmt.Println("Import canceled!")
+
+	return nil
+}
+
+func (b *Books) Export() error {
+
+	input, err := util.PromptWithSuggestion("Export db to d drive? (y/n) ", "n")
+	if err != nil {
+		return err
+	}
+
+	if input == "y" || input == "yes" {
+
+		if err := util.InitBackupStorage(); err != nil {
+			return err
+		}
+
+		if err := b.LoadFromFile(config.LocalFile); err != nil {
+			return fmt.Errorf("load from file: %w", err)
+		}
+
+		books, err := json.MarshalIndent(b, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		if err := os.WriteFile(config.BackupFile, books, 0644); err != nil {
+			return err
+		}
+
+		fmt.Printf("Database exported to %s\nPress Enter!", config.BackupFile)
+		return nil
+	}
+
+	fmt.Println("Export canceled!")
+	return nil
+}
+
 /* Helpers */
 
 func (b *Books) totalPages() int {
