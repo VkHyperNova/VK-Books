@@ -112,6 +112,9 @@ func (b *Books) Delete(id int) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(b.Books[index])
+
 	confirm, err := util.PromptWithSuggestion("(y/n): ", "n")
 	if err != nil {
 		return err
@@ -323,7 +326,6 @@ func (b *Books) save() error {
 func (b *Books) indexOf(id int) (int, error) {
 	for i, books := range b.Books {
 		if books.Id == id {
-			fmt.Println(books)
 			return i, nil
 		}
 	}
