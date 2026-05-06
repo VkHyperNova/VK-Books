@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -140,7 +141,16 @@ func (b *Books) PrintLatest(numberOfBooks int) {
 
 func (b *Books) PrintSummary() {
 
-	totalPagesRead := fmt.Sprintf("\n%d Pages | %d Books\n", b.totalPages(), len(b.Books))
+	totalPages := 0
+	for _, book := range b.Books {
+		pages, err := strconv.Atoi(book.Pages)
+		if err != nil {
+			fmt.Println(err)
+		}
+		totalPages = totalPages + pages
+	}
+
+	totalPagesRead := fmt.Sprintf("\n%d Pages | %d Books\n", totalPages, len(b.Books))
 	fmt.Print(color.Yellow + totalPagesRead + color.Reset)
 }
 
@@ -229,21 +239,35 @@ func (b *Books) Export() error {
 	return nil
 }
 
-/* Helpers */
+func (b *Books) Stats()  {
+	// Group books by year
+	yearMap := make(map[string][]Book)
 
-func (b *Books) totalPages() int {
-	totalPages := 0
 	for _, book := range b.Books {
-		pages, err := strconv.Atoi(book.Pages)
-		if err != nil {
-			fmt.Print(book)
-			fmt.Println(err)
-		}
-		totalPages = totalPages + pages
+		// Extract year from "DD.MM.YYYY" date format
+		year := util.GetYear(book.Date)
+		yearMap[year] = append(yearMap[year], book)
 	}
 
-	return totalPages
+	// Collect years and sort them chronologically
+	years := make([]string, 0, len(yearMap))
+	for year := range yearMap {
+		years = append(years, year)
+	}
+	sort.Strings(years)
+
+	// Print each year with its books
+	for _, year := range years {
+		books := yearMap[year]
+		fmt.Printf("\n📅 Year: %s (%d books)\n", year, len(books))
+		fmt.Println(strings.Repeat("-", 50))
+		for i, book := range books {
+			fmt.Printf("  %d. [%s] %s — %s\n", i+1, book.Date, book.Name, book.Author)
+		}
+	}
 }
+
+/* Helpers */
 
 func (b *Books) formatBook(book Book) string {
 	bookID := fmt.Sprintf("%s%v%s", color.Yellow, book.Id, color.Reset)
@@ -319,7 +343,7 @@ func (b *Books) promptBookInput(suggestions Book) (Book, error) {
 	if suggestions.Language == "" {
 		suggestions.Language = util.DetectLanguage(suggestions.Name)
 	}
-	
+
 	if suggestions.Date == "" {
 		suggestions.Date = time.Now().Format("02.01.2006")
 	}

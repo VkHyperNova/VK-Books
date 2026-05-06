@@ -13,7 +13,7 @@ func Run(b *db.Books) {
 
 	for {
 
-		fmt.Println(color.Yellow + "\n< add, update, delete, import, export, unmount, history, q >" + color.Reset)
+		fmt.Println(color.Yellow + "\n< add, update, delete, import, export, unmount, stats, history, q >" + color.Reset)
 
 		command, id := util.ReadInput()
 		if command == "" {
@@ -48,11 +48,12 @@ func Run(b *db.Books) {
 			if err := b.Export(); err != nil {
 				fmt.Println(err)
 			}
-
 		case "unmount":
 			if err := util.UnmountDrive(); err != nil {
 				fmt.Println(err)
 			}
+		case "stats":
+			b.Stats()
 		case "history", "h":
 			b.History()
 		case "q", "quit":

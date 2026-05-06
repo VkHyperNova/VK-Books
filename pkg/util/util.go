@@ -231,3 +231,11 @@ func DetectLanguage(name string) string {
 	return "English"
 }
 
+func GetYear(date string) string {
+	parts := strings.Split(date, ".")
+	if len(parts) == 3 {
+		return parts[2]
+	}
+	return ""
+}
+
