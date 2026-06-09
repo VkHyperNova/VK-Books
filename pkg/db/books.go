@@ -85,10 +85,6 @@ func (b *Books) Add() error {
 
 func (b *Books) Update(id int) error {
 
-	if id <= 0 {
-		return fmt.Errorf("invalid ID: %d", id)
-	}
-
 	index, err := b.indexOf(id)
 	if err != nil {
 		return err
@@ -105,9 +101,7 @@ func (b *Books) Update(id int) error {
 }
 
 func (b *Books) Delete(id int) error {
-	if id <= 0 {
-		return fmt.Errorf("invalid ID: %d", id)
-	}
+
 	index, err := b.indexOf(id)
 	if err != nil {
 		return err
@@ -150,7 +144,14 @@ func (b *Books) PrintSummary() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		totalPages = totalPages + pages
+
+		readCount, err := strconv.Atoi(book.ReadCount)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+
+		totalPages = totalPages + (pages * readCount)
 	}
 
 	totalPagesRead := fmt.Sprintf("\n%d Pages | %d Books\n", totalPages, len(b.Books))
@@ -242,7 +243,7 @@ func (b *Books) Export() error {
 	return nil
 }
 
-func (b *Books) Stats()  {
+func (b *Books) Stats() {
 	// Group books by year
 	yearMap := make(map[string][]Book)
 
@@ -324,6 +325,9 @@ func (b *Books) save() error {
 }
 
 func (b *Books) indexOf(id int) (int, error) {
+	if id <= 0 {
+		return -1, fmt.Errorf("invalid ID: %d", id)
+	}
 	for i, books := range b.Books {
 		if books.Id == id {
 			return i, nil
