@@ -25,8 +25,8 @@ const (
 	driveMountPoint = "/media/veikko/VK DATA"
 	file            = "books.json"
 	baseDB          = "BOOKS"
-	// baseLocal       = "DATABASES"
-	baseLocal = "DEVELOPMENT"
+	baseLocal       = "DATABASES"
+	// baseLocal = "DEVELOPMENT"
 
 	usage = Bold + "Usage:" + Reset + `
   books [command] [arguments]
